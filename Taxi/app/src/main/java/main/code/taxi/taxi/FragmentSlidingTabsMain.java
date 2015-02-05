@@ -1,8 +1,7 @@
 package main.code.taxi.taxi;
 
-import android.support.v4.app.Fragment;
-import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -27,8 +26,9 @@ public class FragmentSlidingTabsMain extends Fragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setRetainInstance(false);
-        Log.d("Fragment","Successfully created");
+
         fragments=new ArrayList<FragItem>();
         populateList();
     }
@@ -36,10 +36,12 @@ public class FragmentSlidingTabsMain extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.d("Fragment", "Successfully created View");
         return inflater.inflate(R.layout.fragment_main_sliding, container, false);
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Log.d("Fragment", "On View Created");
         mViewPager = (ViewPager) view.findViewById(R.id.viewpager_tabs_main);
         mViewPager.setAdapter(new PageAdapter(getChildFragmentManager()));
         mSlidingTabLayout = (SlidingTabLayout) view.findViewById(R.id.sliding_tabs_main);
@@ -66,8 +68,8 @@ public class FragmentSlidingTabsMain extends Fragment{
         Fragment frag1=null;
         Fragment frag2=null;
 
-        fragments.add(new FragItem(frag1, Color.BLUE,"Frag1"));
-        fragments.add(new FragItem(frag2,Color.GREEN,"Frag2"));
+//        fragments.add(new FragItem(frag1, Color.BLUE,"Frag1"));
+//        fragments.add(new FragItem(frag2,Color.GREEN,"Frag2"));
     }
 
     protected class PageAdapter extends FragmentPagerAdapter {
