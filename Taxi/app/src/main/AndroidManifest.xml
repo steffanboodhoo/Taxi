@@ -45,6 +45,10 @@
             android:name=".DriverDetails"
             android:label="@string/title_activity_driver_details" >
         </activity>
+        <activity
+            android:name=".PassengerDetails"
+            android:label="@string/title_activity_passenger_details" >
+        </activity>
     </application>
 
 </manifest>

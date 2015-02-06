@@ -248,7 +248,8 @@ public class Main extends ActionBarActivity
                 if(user== Utils.UserType.DriverType)
                     map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));//todo
                 else
-                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));
+                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.icon_driver)));
             }else
                 m.setPosition(pos);
         } catch (Exception e) {e.printStackTrace();}
@@ -305,14 +306,16 @@ public class Main extends ActionBarActivity
             PopupRequestService p = new PopupRequestService();
             Passenger passenger=(Passenger)data.get(title);
             if(passenger!=null)
-                b.putString(Utils.json_key_identifier,passenger.getIdentifier());
+                return false;
+            b.putString(Utils.json_key_identifier,passenger.getIdentifier());
             p.setArguments(b);
             p.show(getFragmentManager(),"fm");
         }else{
             PopupRequestService p = new PopupRequestService();
             Driver driver=(Driver)data.get(title);
-            if(driver!=null)
-                b.putString(Utils.json_key_identifier,driver.getIdentifier());
+            if(driver==null)
+                    return false;
+            b.putString(Utils.json_key_identifier,driver.getIdentifier());
             p.setArguments(b);
             p.show(getFragmentManager(),"fm");
         }
