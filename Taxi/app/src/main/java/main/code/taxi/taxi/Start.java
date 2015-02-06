@@ -1,8 +1,8 @@
 package main.code.taxi.taxi;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,7 +38,7 @@ public class Start extends ActionBarActivity {
             if(v.getId()==R.id.btn_start_driver){
                 startActivity(new Intent(getApplicationContext(),DriverDetails.class));
             }else  if(v.getId()==R.id.btn_start_passenger){
-
+                startActivity(new Intent(getApplicationContext(), PassengerDetails.class));
             }
 
         }

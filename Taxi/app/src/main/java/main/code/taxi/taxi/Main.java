@@ -248,7 +248,8 @@ public class Main extends ActionBarActivity
                 if(user== Utils.UserType.DriverType)
                     map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));//todo
                 else
-                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));
+                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.icon_driver)));
             }else
                 m.setPosition(pos);
         } catch (Exception e) {e.printStackTrace();}
