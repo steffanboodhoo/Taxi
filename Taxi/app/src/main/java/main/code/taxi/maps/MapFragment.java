@@ -80,6 +80,7 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         updateUI();
     }
+
     private void updateUI() {
         Toast.makeText(getActivity(),""+String.valueOf(mCurrentLocation.getLatitude()),Toast.LENGTH_SHORT).show();
     }
@@ -88,4 +89,10 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
+
+    public void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
+
 }
