@@ -1,10 +1,17 @@
 package main.code.taxi.taxi;
 
-import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import main.code.taxi.utils.PreferenceManager;
+import main.code.taxi.utils.Utils;
 
 
 public class DriverDetails extends ActionBarActivity {
@@ -16,8 +23,24 @@ public class DriverDetails extends ActionBarActivity {
         setup();
     }
 
-    private void setup() {
-        EditText username=
+    private void setup(){
+        final EditText username=(EditText)findViewById(R.id.et_driver_name);
+        final EditText numberplate=(EditText)findViewById(R.id.et_driver_numberPlate);
+        Button btn=(Button)findViewById(R.id.btn_driver_details_done);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(v.getId()==R.id.btn_driver_details_done){
+                    String unmae=username.getText().toString();
+                    String numberPlate=numberplate.getText().toString();
+                    Toast.makeText(getApplicationContext(),"saved "+unmae+" "+numberPlate,Toast.LENGTH_SHORT).show();
+                    PreferenceManager.saveNumberPlate(DriverDetails.this,numberPlate);
+                    PreferenceManager.saveUserName(DriverDetails.this, unmae);
+                    PreferenceManager.saveUserType(DriverDetails.this, Utils.userTypeDriver);
+                    startActivity(new Intent(getApplicationContext(),Main.class));
+                }
+            }
+        });
     }
 
 

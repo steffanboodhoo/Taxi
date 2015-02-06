@@ -34,6 +34,19 @@ public class PreferenceManager {
         editor.putString(Utils.pref_userType, userType);
         editor.commit();
     }
+    //Type of user
+    public static String getNumberPlate(Activity activity){
+        SharedPreferences pref = (activity.getApplicationContext())
+                .getSharedPreferences(Utils.pref_user_key, Context.MODE_PRIVATE);
+        return pref.getString(Utils.pref_numberPlate,Utils.unknownString);//if does not exist returns unknown String
+    }
+    public static void saveNumberPlate(Activity activity,String numberplate){
+        SharedPreferences pref = activity.getSharedPreferences(Utils.pref_user_key,
+                Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(Utils.pref_numberPlate, numberplate);
+        editor.commit();
+    }
 
     //Vehicle Capacity
     public static int getVehicleCapacity(Activity activity){

@@ -33,7 +33,7 @@ public class Start extends ActionBarActivity {
         @Override
         public void onClick(View v) {
             if(v.getId()==R.id.btn_start_driver){
-
+                startActivity(new Intent(getApplicationContext(),DriverDetails.class));
             }else  if(v.getId()==R.id.btn_start_passenger){
 
             }

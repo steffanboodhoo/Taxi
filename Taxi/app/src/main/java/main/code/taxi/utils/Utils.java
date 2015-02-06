@@ -13,6 +13,7 @@ public class Utils {
     public static String pref_user_key="userPref";
     public static String pref_name="username";
     public static String pref_userType="userType";
+    public static String pref_numberPlate="numberplate";
     public static String unknownString="unknown";
 
     public static String userTypeDriver="typeDriver";
