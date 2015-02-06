@@ -48,24 +48,6 @@ public class Main extends ActionBarActivity
         FragmentTransaction ft= getFragmentManager().beginTransaction();
         ft.add(R.id.main_container,mapFragment);
         ft.commit();
-
-      /*  try{
-            Log.d("Main","before socket connection");
-            mSocket= IO.socket("http://127.0.0.1:3000");
-            mSocket.connect();
-//            mSocket.
-        }catch (Exception e){e.printStackTrace();}
-        try {
-            JSONObject userData = new JSONObject();
-            userData.put("user", "steffan");
-            userData.put("long",1.33);
-            userData.put("lat",1.43);
-            mSocket.emit(Utils.ioEvent_passenger_request, userData);
-
-            Log.d("main","Data emitted");
-        }catch (Exception e){e.printStackTrace();};*/
-
-
     }
 
 
