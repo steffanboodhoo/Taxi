@@ -1,23 +1,44 @@
 package main.code.taxi.taxi;
 
-import android.app.FragmentTransaction;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
 
-import main.code.taxi.maps.MapFragment;
+import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.HashMap;
+
+import main.code.taxi.pojo.Passenger;
+import main.code.taxi.utils.Utils;
 
 public class Main extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks{
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,GoogleMap.OnMapClickListener {
 
+    private HashMap markers,data;
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
@@ -26,15 +47,19 @@ public class Main extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+    private String mLastUpdateTime;
+    private Location mCurrentLocation;
     private Socket mSocket;
-    private MapFragment mapFragment;
-
+    private GoogleMap map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        markers= new HashMap();
+        data= new HashMap();
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -43,11 +68,11 @@ public class Main extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
-
-        mapFragment=new MapFragment();
-        FragmentTransaction ft= getFragmentManager().beginTransaction();
-        ft.add(R.id.main_container,mapFragment);
-        ft.commit();
+        setupSocket();
+        MapFragment myMapFragment = (MapFragment) (getFragmentManager()
+                .findFragmentById(R.id.map));
+        myMapFragment.getMapAsync(this);
+        buildGoogleApiClient();
     }
 
 
@@ -100,7 +125,7 @@ public class Main extends ActionBarActivity
         super.onDestroy();
 
         //mSocket.disconnect();
-        ((MapFragment)mapFragment).stopLocationUpdates();
+        stopLocationUpdates();
 //        mSocket.off("disconnected",onNewMessage);
     }
 
@@ -111,4 +136,131 @@ public class Main extends ActionBarActivity
         }
     };
 
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Toast.makeText(this, "connected", Toast.LENGTH_SHORT).show();
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        LatLng pos = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 15));
+        createLocationRequest();
+        startLocationUpdates();
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(500);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        updateUI();
+    }
+
+    private void updateUI() {
+        Log.d("Fragment", String.valueOf(mCurrentLocation.getLatitude()));
+        //Toast.makeText(getActivity(),""+String.valueOf(mCurrentLocation.getLatitude()),Toast.LENGTH_SHORT).show();
+        try{
+            JSONObject userData = new JSONObject();
+            userData.put("user","steffan");
+            userData.put("long",mCurrentLocation.getLongitude());
+            userData.put("lat",mCurrentLocation.getLongitude());
+            mSocket.emit("traveller-request", userData);
+        }catch (Exception e){e.printStackTrace();};
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
+    public void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
+
+    private Emitter.Listener travellerBroadcastRecieve= new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            JSONObject data = (JSONObject)args[0];
+            Toast.makeText(Main.this,data.toString(),Toast.LENGTH_SHORT).show();
+        }
+    };
+    private Emitter.Listener driverBroadcastRecieve = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    Log.d("data", data.toString());
+                    Toast.makeText(Main.this, data.toString(), Toast.LENGTH_SHORT).show();
+                    try {
+                        Passenger p = new Passenger(data.getString("identifier"), data.getDouble("lat"), data.getDouble("lng"));
+                        Main.this.data.put(data.get("identifier"),p);
+
+                    } catch (Exception e) {e.printStackTrace();}
+                }
+            });
+
+        }
+    };
+    private Emitter.Listener onConnectError = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+           runOnUiThread(new Runnable() {
+               @Override
+               public void run() {
+                   Toast.makeText(getApplicationContext(),
+                           "meh", Toast.LENGTH_LONG).show();
+
+               }
+           });
+        }
+    };
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mGoogleApiClient.connect();
+        map=googleMap;
+    }
+    private void setupSocket(){
+        try{
+            Log.d("Main", "before socket connection");
+            mSocket= IO.socket(Utils.mainUrl);
+            mSocket.emit("driver-start","");
+            mSocket.on("customer",driverBroadcastRecieve);
+            mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
+            mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
+            mSocket.connect();
+        }catch (Exception e){e.printStackTrace();}
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+
+    }
 }

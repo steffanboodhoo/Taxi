@@ -17,6 +17,11 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONObject;
 
@@ -29,23 +34,27 @@ import main.code.taxi.utils.Utils;
 /**
  * Created by Steffan on 05/02/2015.
  */
-public class MapFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MyMapFragment extends Fragment implements OnMapReadyCallback,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     View view;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private String mLastUpdateTime;
     private Location mCurrentLocation;
     private Socket mSocket;
+    private GoogleMap map;
 
+    //    private HashMap
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_main,container,false);
-        MapFragment mapFragment = (MapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.map);
-//        mapFragment.getMapAsync(this);
+        MapFragment myMapFragment = (MapFragment) (getFragmentManager()
+                .findFragmentById(R.id.map));
+       if(myMapFragment==null)
+            Log.d("Fragment","null");
+        myMapFragment.getMapAsync(this);
         buildGoogleApiClient();
-        mGoogleApiClient.connect();
+
         return view;
     }
 
@@ -55,15 +64,11 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
         try{
             Log.d("Main", "before socket connection");
             mSocket= IO.socket(Utils.mainUrl);
-
             mSocket.emit("driver-start","");
             mSocket.on("customer",driverBroadcastRecieve);
             mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
             mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
             mSocket.connect();
-
-
-
         }catch (Exception e){e.printStackTrace();}
 
     }
@@ -79,8 +84,11 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
     @Override
     public void onConnected(Bundle bundle) {
         Toast.makeText(getActivity(), "connected", Toast.LENGTH_SHORT).show();
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        LatLng pos = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 15));
         createLocationRequest();
-        //if (mRequestingLocationUpdates) {
         startLocationUpdates();
     }
 
@@ -165,4 +173,8 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
         }
     };
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mGoogleApiClient.connect();
+    }
 }
