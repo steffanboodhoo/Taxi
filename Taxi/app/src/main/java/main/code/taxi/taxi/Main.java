@@ -305,14 +305,16 @@ public class Main extends ActionBarActivity
             PopupRequestService p = new PopupRequestService();
             Passenger passenger=(Passenger)data.get(title);
             if(passenger!=null)
-                b.putString(Utils.json_key_identifier,passenger.getIdentifier());
+                return false;
+            b.putString(Utils.json_key_identifier,passenger.getIdentifier());
             p.setArguments(b);
             p.show(getFragmentManager(),"fm");
         }else{
             PopupRequestService p = new PopupRequestService();
             Driver driver=(Driver)data.get(title);
-            if(driver!=null)
-                b.putString(Utils.json_key_identifier,driver.getIdentifier());
+            if(driver==null)
+                    return false;
+            b.putString(Utils.json_key_identifier,driver.getIdentifier());
             p.setArguments(b);
             p.show(getFragmentManager(),"fm");
         }

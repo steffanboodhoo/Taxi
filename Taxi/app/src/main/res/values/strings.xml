@@ -12,5 +12,6 @@
     <string name="title_activity_start">Start</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_driver_details">DriverDetails</string>
+    <string name="title_activity_passenger_details">PassengerDetails</string>
 
 </resources>

@@ -1,53 +1,47 @@
 package main.code.taxi.taxi;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import main.code.taxi.utils.PreferenceManager;
 import main.code.taxi.utils.Utils;
 
 
-public class Start extends ActionBarActivity {
+public class PassengerDetails extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_start);
-        if(!PreferenceManager.getUserType(this).equals(Utils.unknownString)){
-            startActivity(new Intent(getApplicationContext(),Main.class));
-        }
+        setContentView(R.layout.activity_passenger_details);
         setup();
     }
 
-    public void setup(){
-        Button btn1=(Button)findViewById(R.id.btn_start_driver);
-        Button btn2=(Button)findViewById(R.id.btn_start_passenger);
-        Click c =new Click();
-        btn1.setOnClickListener(c);
-        btn2.setOnClickListener(c);
-
-    }
-    class Click implements View.OnClickListener{
-        @Override
-        public void onClick(View v) {
-            if(v.getId()==R.id.btn_start_driver){
-                startActivity(new Intent(getApplicationContext(),DriverDetails.class));
-            }else  if(v.getId()==R.id.btn_start_passenger){
-
+    private void setup() {
+        final EditText uname=(EditText)findViewById(R.id.et_passenger_uname);
+        Button btn=(Button)findViewById(R.id.btn_passenger_details_done);
+        btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if(v.getId()==R.id.btn_passenger_details_done){
+                    PreferenceManager.saveUserName(PassengerDetails.this,uname.getText().toString());
+                    PreferenceManager.saveUserType(PassengerDetails.this, Utils.userTypePassenger);
+                    startActivity(new Intent(getApplicationContext(),Main.class));
+                }
             }
-
-        }
+        });
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_start, menu);
+        getMenuInflater().inflate(R.menu.menu_passenger_details, menu);
         return true;
     }
 
