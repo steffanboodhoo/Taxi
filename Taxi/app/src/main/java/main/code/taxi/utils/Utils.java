@@ -20,5 +20,9 @@ public class Utils {
 
     public static String pref_vehicleCap="vehicleCapacity";
 
+    public static String json_key_identifier="user";
+    public static String json_key_lat="lat";
+    public static String json_key_lng="lng";
 
+    public enum UserType {DriverType, PassengerType};
 }

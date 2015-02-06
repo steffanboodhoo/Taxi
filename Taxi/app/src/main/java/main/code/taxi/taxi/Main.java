@@ -23,7 +23,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
 
@@ -31,12 +34,17 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
+import main.code.taxi.maps.PopupRequestService;
+import main.code.taxi.pojo.Driver;
 import main.code.taxi.pojo.Passenger;
+import main.code.taxi.utils.PreferenceManager;
 import main.code.taxi.utils.Utils;
 
 public class Main extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,GoogleMap.OnMapClickListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener
+        ,GoogleMap.OnMapClickListener,GoogleMap.OnMarkerClickListener,GoogleMap.OnMarkerDragListener {
+
 
     private HashMap markers,data;
     /**
@@ -53,11 +61,17 @@ public class Main extends ActionBarActivity
     private Location mCurrentLocation;
     private Socket mSocket;
     private GoogleMap map;
-
+    private Utils.UserType user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //store the type of user it is
+        if(PreferenceManager.getUserType(this).equals(Utils.userTypeDriver))
+            user= Utils.UserType.DriverType;
+        else
+            user= Utils.UserType.PassengerType;
+
         markers= new HashMap();
         data= new HashMap();
         mNavigationDrawerFragment = (NavigationDrawerFragment)
@@ -149,8 +163,13 @@ public class Main extends ActionBarActivity
         Toast.makeText(this, "connected", Toast.LENGTH_SHORT).show();
         Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
-        LatLng pos = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 15));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude()), 19));
+        if(user== Utils.UserType.PassengerType)
+            map.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("you"));
+        else
+            map.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).title("you"));
         createLocationRequest();
         startLocationUpdates();
     }
@@ -180,13 +199,12 @@ public class Main extends ActionBarActivity
     }
 
     private void updateUI() {
-        Log.d("Fragment", String.valueOf(mCurrentLocation.getLatitude()));
         //Toast.makeText(getActivity(),""+String.valueOf(mCurrentLocation.getLatitude()),Toast.LENGTH_SHORT).show();
         try{
             JSONObject userData = new JSONObject();
             userData.put("user","steffan");
-            userData.put("long",mCurrentLocation.getLongitude());
-            userData.put("lat",mCurrentLocation.getLongitude());
+            userData.put(Utils.json_key_lng,mCurrentLocation.getLongitude());
+            userData.put(Utils.json_key_lat,mCurrentLocation.getLatitude());
             mSocket.emit("traveller-request", userData);
         }catch (Exception e){e.printStackTrace();};
 
@@ -206,28 +224,35 @@ public class Main extends ActionBarActivity
         @Override
         public void call(Object... args) {
             JSONObject data = (JSONObject)args[0];
-            Toast.makeText(Main.this,data.toString(),Toast.LENGTH_SHORT).show();
+
         }
     };
-    private Emitter.Listener driverBroadcastRecieve = new Emitter.Listener() {
+    private Emitter.Listener BroadcastRecieve = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    JSONObject data = (JSONObject) args[0];
-                    Log.d("data", data.toString());
-                    Toast.makeText(Main.this, data.toString(), Toast.LENGTH_SHORT).show();
-                    try {
-                        Passenger p = new Passenger(data.getString("identifier"), data.getDouble("lat"), data.getDouble("lng"));
-                        Main.this.data.put(data.get("identifier"),p);
-
-                    } catch (Exception e) {e.printStackTrace();}
+                    handleBroadcast((JSONObject) args[0]);
                 }
             });
-
         }
     };
+    public void handleBroadcast(JSONObject data){
+        try {
+            LatLng pos = new LatLng(data.getDouble(Utils.json_key_lat),data.getDouble(Utils.json_key_lng));
+            Passenger p = new Passenger(data.getString(Utils.json_key_identifier), data.getDouble(Utils.json_key_lat), data.getDouble(Utils.json_key_lng));
+            Main.this.data.put(data.get(Utils.json_key_identifier),p);
+            Marker m=(Marker)Main.this.markers.get(data.get(Utils.json_key_identifier));
+            if(m==null) {
+                if(user== Utils.UserType.DriverType)
+                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));//todo
+                else
+                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));
+            }else
+                m.setPosition(pos);
+        } catch (Exception e) {e.printStackTrace();}
+    }
     private Emitter.Listener onConnectError = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
@@ -246,13 +271,21 @@ public class Main extends ActionBarActivity
     public void onMapReady(GoogleMap googleMap) {
         mGoogleApiClient.connect();
         map=googleMap;
+        map.setOnMarkerClickListener(this);
+        map.setOnMapClickListener(this);
+        map.setOnMarkerDragListener(this);
     }
     private void setupSocket(){
         try{
             Log.d("Main", "before socket connection");
             mSocket= IO.socket(Utils.mainUrl);
-            mSocket.emit("driver-start","");
-            mSocket.on("customer",driverBroadcastRecieve);
+            if(user==Utils.UserType.DriverType) {
+                mSocket.emit("driver-start", "");
+                mSocket.on("customer", BroadcastRecieve);
+            }else{
+                mSocket.emit("user-start", "");
+                mSocket.on("driver-info", BroadcastRecieve);
+            }
             mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
             mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
             mSocket.connect();
@@ -261,6 +294,43 @@ public class Main extends ActionBarActivity
 
     @Override
     public void onMapClick(LatLng latLng) {
+
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        String title=(String)data.get(marker.getTitle());
+        Bundle b=new Bundle();
+        if(user== Utils.UserType.DriverType){
+            PopupRequestService p = new PopupRequestService();
+            Passenger passenger=(Passenger)data.get(title);
+            if(passenger!=null)
+                b.putString(Utils.json_key_identifier,passenger.getIdentifier());
+            p.setArguments(b);
+            p.show(getFragmentManager(),"fm");
+        }else{
+            PopupRequestService p = new PopupRequestService();
+            Driver driver=(Driver)data.get(title);
+            if(driver!=null)
+                b.putString(Utils.json_key_identifier,driver.getIdentifier());
+            p.setArguments(b);
+            p.show(getFragmentManager(),"fm");
+        }
+        return false;
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
 
     }
 }

@@ -3,8 +3,6 @@ package main.code.taxi.help;
 import android.app.Activity;
 import android.view.View;
 
-import main.code.taxi.taxi.R;
-
 /**
  * Created by Steffan on 06/02/2015.
  */
@@ -18,10 +16,10 @@ public class ClickManager implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        if(v.getId()== R.id.btn_request_service_okay){
+      /*  if(v.getId()== R.id.btn_request_service_okay){
             //do something
         }else if(v.getId()==R.id.btn_request_service_cancel){
             //do something
-        }
+        }*/
     }
 }

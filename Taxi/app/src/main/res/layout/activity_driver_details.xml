@@ -1,0 +1,40 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="main.code.taxi.taxi.Start">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:padding="30dp"
+        android:textSize="30sp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Select which type of user you are"
+        android:id="@+id/textView2" />
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="username here"
+        android:id="@+id/et_driver_name"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="2" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_marginTop="20dp"
+        android:layout_height="0dp"
+        android:hint="number plate here"
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/et_driver_numberPlate"
+        android:layout_weight="2" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:text="Done"
+        android:id="@+id/button" />
+
+
+</LinearLayout>

@@ -15,15 +15,5 @@
         android:text="Contact user ?"
         android:id="@+id/textView" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Okay"
-        android:id="@+id/btn_request_service_okay" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cancel"
-        android:id="@+id/btn_request_service_cancel" />
 </LinearLayout>
