@@ -18,6 +18,7 @@ public class Start extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+        startActivity(new Intent(Start.this,Main.class));
         if(!PreferenceManager.getUserType(this).equals(Utils.unknownString)){
             startActivity(new Intent(getApplicationContext(),Main.class));
         }
