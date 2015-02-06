@@ -10,7 +10,7 @@
         android:padding="30dp"
         android:textSize="30sp"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Select which type of user you are"
+        android:text="Please Enter Your Information Below"
         android:id="@+id/tv_passenger_details" />
 
 

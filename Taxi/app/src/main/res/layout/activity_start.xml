@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="main.code.taxi.taxi.Start">
+    tools:context="main.code.taxi.taxi.Start"
+    android:background="#69F0AE">
 
     <TextView
         android:layout_width="match_parent"
