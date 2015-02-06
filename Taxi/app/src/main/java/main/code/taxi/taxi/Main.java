@@ -202,10 +202,16 @@ public class Main extends ActionBarActivity
         //Toast.makeText(getActivity(),""+String.valueOf(mCurrentLocation.getLatitude()),Toast.LENGTH_SHORT).show();
         try{
             JSONObject userData = new JSONObject();
-            userData.put("user","steffan");
+            userData.put("user",PreferenceManager.getUserName(this));
             userData.put(Utils.json_key_lng,mCurrentLocation.getLongitude());
             userData.put(Utils.json_key_lat,mCurrentLocation.getLatitude());
-            mSocket.emit("traveller-request", userData);
+            if(user==Utils.UserType.DriverType) {
+                userData.put(Utils.json_key_plate,PreferenceManager.getUserName(this));
+                mSocket.emit("driver-broadcast", userData);//sends to driver info
+            }else{
+                mSocket.emit("user-request", userData);
+            }
+
         }catch (Exception e){e.printStackTrace();};
 
     }
@@ -261,7 +267,7 @@ public class Main extends ActionBarActivity
                @Override
                public void run() {
                    Toast.makeText(getApplicationContext(),
-                           "meh", Toast.LENGTH_LONG).show();
+                           "Connection Error, Try again later", Toast.LENGTH_LONG).show();
 
                }
            });
@@ -282,7 +288,7 @@ public class Main extends ActionBarActivity
             mSocket= IO.socket(Utils.mainUrl);
             if(user==Utils.UserType.DriverType) {
                 mSocket.emit("driver-start", "");
-                mSocket.on("customer", BroadcastRecieve);
+                mSocket.on("see-user", BroadcastRecieve);
             }else{
                 mSocket.emit("user-start", "");
                 mSocket.on("driver-info", BroadcastRecieve);
@@ -317,7 +323,7 @@ public class Main extends ActionBarActivity
                     return false;
             b.putString(Utils.json_key_identifier,driver.getIdentifier());
             p.setArguments(b);
-            p.show(getFragmentManager(),"fm");
+            p.show(getFragmentManager(), "fm");
         }
         return false;
     }
