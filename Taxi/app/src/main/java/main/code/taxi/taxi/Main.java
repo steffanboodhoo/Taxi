@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -34,6 +35,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
+import main.code.taxi.help.ClickManager;
 import main.code.taxi.maps.PopupRequestService;
 import main.code.taxi.pojo.Driver;
 import main.code.taxi.pojo.Passenger;
@@ -45,7 +47,7 @@ public class Main extends ActionBarActivity
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener
         ,GoogleMap.OnMapClickListener,GoogleMap.OnMarkerClickListener,GoogleMap.OnMarkerDragListener {
 
-
+    public boolean markReady=false;
     private HashMap markers,data;
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -62,6 +64,7 @@ public class Main extends ActionBarActivity
     private Socket mSocket;
     private GoogleMap map;
     private Utils.UserType user;
+    private Marker currMark;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,10 +86,21 @@ public class Main extends ActionBarActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
         setupSocket();
+        setup();
         MapFragment myMapFragment = (MapFragment) (getFragmentManager()
                 .findFragmentById(R.id.map));
         myMapFragment.getMapAsync(this);
         buildGoogleApiClient();
+    }
+
+    private void setup() {
+        FloatingActionButton b1 = (FloatingActionButton)findViewById(R.id.action_a);
+        FloatingActionButton b2 = (FloatingActionButton)findViewById(R.id.action_b);
+        FloatingActionButton b3 = (FloatingActionButton)findViewById(R.id.action_c);
+        ClickManager c = new ClickManager(this);
+        b1.setOnClickListener(c);
+        b2.setOnClickListener(c);
+        b3.setOnClickListener(c);
     }
 
 
@@ -251,11 +265,13 @@ public class Main extends ActionBarActivity
             Main.this.data.put(data.get(Utils.json_key_identifier),p);
             Marker m=(Marker)Main.this.markers.get(data.get(Utils.json_key_identifier));
             if(m==null) {
-                if(user== Utils.UserType.DriverType)
-                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));//todo
-                else
-                    map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos)
+                if(user== Utils.UserType.DriverType) {
+                    m = map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos));//todo
+                }else {
+                    m = map.addMarker(new MarkerOptions().title(data.getString(Utils.json_key_identifier)).position(pos)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.icon_driver)));
+                }
+                markers.put(data.getString(Utils.json_key_identifier),m);
             }else
                 m.setPosition(pos);
         } catch (Exception e) {e.printStackTrace();}
@@ -301,7 +317,12 @@ public class Main extends ActionBarActivity
 
     @Override
     public void onMapClick(LatLng latLng) {
-
+        if(markReady){
+            if(currMark==null)
+                currMark=map.addMarker(new MarkerOptions().draggable(true).position(latLng));
+            else
+                currMark.setPosition(latLng);
+        }
     }
 
     @Override
