@@ -1,8 +1,9 @@
 apply plugin: 'com.android.application'
 dependencies{
     compile 'com.github.nkzawa:socket.io-client:0.3.0'
-    compile 'com.google.android.gms:play-services:5.+'
     compile 'com.google.android.gms:play-services:6.+'
+    compile 'com.jjoe64:graphview:4.0.0'
+    compile 'com.getbase:floatingactionbutton:1.7.0'
 }
 android {
     compileSdkVersion 21

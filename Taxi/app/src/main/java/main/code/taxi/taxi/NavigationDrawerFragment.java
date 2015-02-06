@@ -94,6 +94,7 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getActivity(),"hyea",Toast.LENGTH_SHORT).show();
                 selectItem(position);
             }
         });

@@ -3,21 +3,28 @@ package main.code.taxi.maps;
 import android.app.Fragment;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import org.json.JSONObject;
+
 import java.text.DateFormat;
 import java.util.Date;
 
 import main.code.taxi.taxi.R;
+import main.code.taxi.utils.Utils;
 
 /**
  * Created by Steffan on 05/02/2015.
@@ -28,6 +35,7 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
     private LocationRequest mLocationRequest;
     private String mLastUpdateTime;
     private Location mCurrentLocation;
+    private Socket mSocket;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -39,6 +47,25 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
         buildGoogleApiClient();
         mGoogleApiClient.connect();
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        try{
+            Log.d("Main", "before socket connection");
+            mSocket= IO.socket(Utils.mainUrl);
+
+            mSocket.emit("driver-start","");
+            mSocket.on("customer",driverBroadcastRecieve);
+            mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
+            mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
+            mSocket.connect();
+
+
+
+        }catch (Exception e){e.printStackTrace();}
+
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -80,12 +107,62 @@ public class MapFragment extends Fragment implements GoogleApiClient.ConnectionC
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         updateUI();
     }
+
     private void updateUI() {
-        Toast.makeText(getActivity(),""+String.valueOf(mCurrentLocation.getLatitude()),Toast.LENGTH_SHORT).show();
+        Log.d("Fragment",String.valueOf(mCurrentLocation.getLatitude()));
+        //Toast.makeText(getActivity(),""+String.valueOf(mCurrentLocation.getLatitude()),Toast.LENGTH_SHORT).show();
+        try{
+            JSONObject userData = new JSONObject();
+            userData.put("user","steffan");
+            userData.put("long",mCurrentLocation.getLongitude());
+            userData.put("lat",mCurrentLocation.getLongitude());
+            mSocket.emit("traveller-request", userData);
+        }catch (Exception e){e.printStackTrace();};
+
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
+
+    public void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
+
+    private Emitter.Listener travellerBroadcastRecieve= new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            JSONObject data = (JSONObject)args[0];
+            Toast.makeText(getActivity(),data.toString(),Toast.LENGTH_SHORT).show();
+        }
+    };
+    private Emitter.Listener driverBroadcastRecieve = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject)args[0];
+                    Log.d("data",data.toString());
+                    Toast.makeText(getActivity(),data.toString(),Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
+    };
+    private Emitter.Listener onConnectError = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity().getApplicationContext(),
+                            "meh", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    };
+
 }

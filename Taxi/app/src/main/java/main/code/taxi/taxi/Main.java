@@ -1,8 +1,6 @@
 package main.code.taxi.taxi;
 
-import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -14,8 +12,6 @@ import android.widget.Toast;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.Socket;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
 
 import main.code.taxi.maps.MapFragment;
 
@@ -26,16 +22,13 @@ public class Main extends ActionBarActivity
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
-    private boolean mRequestingLocationUpdates=false;
-    private LocationRequest mLocationRequest;
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
     private Socket mSocket;
-    private GoogleApiClient mGoogleApiClient;
-    private Location mCurrentLocation;
-    private String mLastUpdateTime;
+    private MapFragment mapFragment;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,30 +44,11 @@ public class Main extends ActionBarActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        Fragment fragment=new MapFragment();
+        mapFragment=new MapFragment();
         FragmentTransaction ft= getFragmentManager().beginTransaction();
-        ft.add(R.id.main_container,fragment);
+        ft.add(R.id.main_container,mapFragment);
         ft.commit();
-
-      /*  try{
-            Log.d("Main","before socket connection");
-            mSocket= IO.socket("http://127.0.0.1:3000");
-            mSocket.connect();
-//            mSocket.
-        }catch (Exception e){e.printStackTrace();}
-        try {
-            JSONObject userData = new JSONObject();
-            userData.put("user", "steffan");
-            userData.put("long",1.33);
-            userData.put("lat",1.43);
-            mSocket.emit(Utils.ioEvent_passenger_request, userData);
-
-            Log.d("main","Data emitted");
-        }catch (Exception e){e.printStackTrace();};*/
-
-
     }
-
 
 
     @Override
@@ -112,6 +86,7 @@ public class Main extends ActionBarActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+        Toast.makeText(this,"optionsItemSelected",Toast.LENGTH_SHORT).show();
         if (id == R.id.action_settings) {
             return true;
         }
@@ -124,7 +99,8 @@ public class Main extends ActionBarActivity
     public void onDestroy() {
         super.onDestroy();
 
-        mSocket.disconnect();
+        //mSocket.disconnect();
+        ((MapFragment)mapFragment).stopLocationUpdates();
 //        mSocket.off("disconnected",onNewMessage);
     }
 

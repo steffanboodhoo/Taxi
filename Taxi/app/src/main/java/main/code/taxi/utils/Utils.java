@@ -4,7 +4,7 @@ package main.code.taxi.utils;
  * Created by Steffan on 05/02/2015.
  */
 public class Utils {
-    public static String mainUrl="";
+    public static String mainUrl="https://wicked-castle-9292.herokuapp.com";
 
     public static String ioEvent_passenger_broadcast="passengerBroadcast";
     public static String ioEvent_driver_broadcast="driverBroadcast";
